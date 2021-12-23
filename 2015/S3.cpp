@@ -34,7 +34,6 @@ int main()
 
             else if (j == 0) {
                 cout << sum << "\n";
-                system("pause");
                 return 0;
             }
 
