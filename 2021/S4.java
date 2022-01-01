@@ -1,4 +1,5 @@
-// 4/15 on DMOJ
+// 7/15 on DMOJ
+
 import java.util.*;
 import java.io.*;
 
@@ -6,9 +7,11 @@ public class S4
 {
 
     static int N, W, D;
-    static Map<Integer, ArrayList<Integer> > walkways;
+    static ArrayList<Integer>[] graph;
     static int[] subways;
     static Swap[] days;
+    
+    static int[] dist;
     
     static BufferedReader br;
     static StringTokenizer st;
@@ -37,88 +40,23 @@ public class S4
         
     }
     
-    // Returns a list of subway nodes that are adjacent to node n
-    public static void getAdjacent(int node, int time, HashSet<Integer> hs) {
+    public static void DFS(int current, int depth) {
         
-        // Add subway node
-        if (time + 1 < subways.length) {
-            
-            hs.add(subways[time + 1]);
-            
+        int d = dist[current] + 1;
+        
+        // check subway
+        if (depth < subways.length - 1 && current == subways[depth]) {
+            dist[subways[depth + 1]] = d;
+            DFS(subways[depth + 1], depth + 1);
         }
         
-        // Add nodes from walkways
-        if (walkways.containsKey(node))
-        {
-            for (int adjNode : walkways.get(node))
-            {
-
-                hs.add(adjNode);
-
+        // check walkways
+        for (int v : graph[current]) {
+            if (dist[v] > d) {
+                dist[v] = d;
+                DFS(v, depth + 1);
             }
         }
-        
-    }
-    
-    public static int BFS() {
-        
-        int mins = 0;
-        
-        ArrayDeque<Integer> q1 = new ArrayDeque<>();
-        ArrayDeque<Integer> q2 = new ArrayDeque<>();
-        
-        q1.addLast(1);
-        
-        boolean qOneUsed = true;
-        
-        // Deque all elements from the queue and add new elements to the next queue
-        while (!q1.isEmpty() || !q2.isEmpty()) {
-            
-            HashSet<Integer> adjacentNodes = new HashSet<>();
-                
-            // Get the adjacent nodes
-            if (qOneUsed) {
-                int size = q1.size();
-                for (int i = 0; i < size; i++) {
-                    getAdjacent(q1.removeFirst(), mins, adjacentNodes);
-                }
-            }
-            
-            else {
-                int size = q2.size();
-                for (int i = 0; i < size; i++) {
-                    getAdjacent(q2.removeFirst(), mins, adjacentNodes);
-                }
-            }
-            
-            // Traverse each adjacent node and add to queue
-            for (int adjNode : adjacentNodes) {
-                
-                // Nth subway found
-                if (adjNode == N) {
-                    return mins + 1;
-                }
-                
-                // Add adjacent node to either queue
-                else {
-                    
-                    if (qOneUsed) {
-                        q2.addLast(adjNode);
-                    }
-                    else {
-                        q1.addLast(adjNode);
-                    }
-                    
-                }
-                
-            }
-            
-            qOneUsed = !qOneUsed;
-            mins++;
-            
-        }
-        
-        return Integer.MAX_VALUE;
         
     }
     
@@ -132,7 +70,12 @@ public class S4
         W = Integer.parseInt(st.nextToken());
         D = Integer.parseInt(st.nextToken());
         
-        walkways = new HashMap<>();
+        graph = new ArrayList[N + 1];
+        dist = new int[N + 1];
+        for (int i = 0; i < graph.length; i++) {
+            graph[i] = new ArrayList<>();
+        }
+        
         subways = new int[N];
         days = new Swap[D];
 
@@ -144,16 +87,7 @@ public class S4
             int key = Integer.parseInt(st.nextToken());
             int value = Integer.parseInt(st.nextToken());
             
-            if (walkways.containsKey(key))
-                walkways.get(key).add(value);
-            
-            else {
-                
-                ArrayList<Integer> temp = new ArrayList<>();
-                temp.add(value);
-                walkways.put(key, temp);
-                
-            }
+            graph[key].add(value);
             
         }
         
@@ -170,9 +104,11 @@ public class S4
         
         for (int i = 0; i < days.length; i++) {
             
+            Arrays.fill(dist, Integer.MAX_VALUE);
             changeSubway(days[i]);
-            
-            System.out.println(BFS());
+            dist[1] = 0;
+            DFS(1, 0);
+            System.out.println(dist[N]);
             
         }
 
